@@ -1,4 +1,4 @@
-@host = 127.0.0.1:8088
+@host = 127.0.0.1:8080
 @contentType = application/json
 
 POST http://{{host}}/posts/

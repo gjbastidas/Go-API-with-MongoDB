@@ -5,6 +5,7 @@ import (
 )
 
 type AppConfig struct {
+	SvrAddr    string `envconfig:"SVR_ADDR" default:":8080" required:"true"`
 	DbUsername string `envconfig:"DB_USERNAME" default:"admin" required:"true"`
 	DbPassword string `envconfig:"DB_PASSWORD" default:"secret" required:"true"`
 	DbHost     string `envconfig:"DB_HOST" default:"localhost" required:"true"`

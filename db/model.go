@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"context"
@@ -13,7 +13,7 @@ type Post struct {
 	Author  string             `json:"author,omitempty" bson:"author,omitempty"`
 }
 
-func (p *Post) createPost(ctx context.Context, mCl *mongo.Client, dbName, colName string) (*mongo.InsertOneResult, error) {
+func (p *Post) CreatePost(ctx context.Context, mCl *mongo.Client, dbName, colName string) (*mongo.InsertOneResult, error) {
 	res, err := mCl.Database(dbName).Collection(colName).InsertOne(ctx, *p)
 	return res, err
 }
