@@ -18,9 +18,9 @@ func (p *Post) CreatePost(ctx context.Context, mCl *mongo.Client, dbName, colNam
 	return res, err
 }
 
-// func (p *post) readPost(mCl *mongo.Client) error {
-// 	return errors.New("Not implemented")
-// }
+func (p *Post) GetPost(ctx context.Context, mCl *mongo.Client, dbName, colName string) *mongo.SingleResult {
+	return mCl.Database(dbName).Collection(colName).FindOne(ctx, *p)
+}
 
 // func (p *post) updatePost(mCl *mongo.Client) error {
 // 	return errors.New("Not implemented")

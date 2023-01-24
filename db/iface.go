@@ -8,4 +8,5 @@ import (
 
 type PostIface interface {
 	CreatePost(ctx context.Context, mCl *mongo.Client, dbName, colName string) (*mongo.InsertOneResult, error)
+	GetPost(ctx context.Context, mCl *mongo.Client, dbName, colName string) *mongo.SingleResult
 }

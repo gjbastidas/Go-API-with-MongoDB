@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,8 +14,8 @@ import (
 func TestCreatePost(t *testing.T) {
 	var a App
 	router := mux.NewRouter()
-	subRouter := router.PathPrefix("/posts").Subrouter()
-	subRouter.HandleFunc("/", a.handleCreatePost(context.TODO(), &appMocks.MockPost{}, "fakeDB", "fakeCollection")).Methods("POST")
+	subRouter := router.PathPrefix("/post").Subrouter()
+	subRouter.HandleFunc("/", a.handleCreatePost(&appMocks.MockPost{}, "fakeDB", "fakeCollection")).Methods("POST")
 
 	w := httptest.NewRecorder()
 	json := strings.NewReader(`{"content":"updated post", "author":"gus bast"}`)
@@ -25,4 +24,18 @@ func TestCreatePost(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, w.Code)
+}
+
+func TestGetPost(t *testing.T) {
+	var a App
+	router := mux.NewRouter()
+	subRouter := router.PathPrefix("/post").Subrouter()
+	subRouter.HandleFunc("/", a.handleGetPost(&appMocks.MockPost{}, "fakeDB", "fakeCollection")).Methods("GET")
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("GET", "/posts/123456", nil)
+	router.ServeHTTP(w, r)
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, w.Code)
 }
