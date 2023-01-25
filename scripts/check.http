@@ -1,10 +1,13 @@
 @host = 127.0.0.1:8080
 @contentType = application/json
 
-POST http://{{host}}/posts/
+POST http://{{host}}/post/
 content-type: {{contentType}}
 
 {
   "content": "my first post",
   "author": "gustavo bastidas"
 }
+
+###
+GET http://{{host}}/post/63cefca7da1c1470664ec41c

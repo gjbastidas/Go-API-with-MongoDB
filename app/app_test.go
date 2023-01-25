@@ -1,54 +1,80 @@
 package app
 
 import (
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
 	appMocks "github.com/gjbastidas/GoSimpleAPIWithMongoDB/mocks"
+	appDb "github.com/gjbastidas/GoSimpleAPIWithMongoDB/models"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func TestCreatePost(t *testing.T) {
-	var a App
-	router := mux.NewRouter()
-	subRouter := router.PathPrefix("/post").Subrouter()
+var a *App
+var router *mux.Router
+var subRouter *mux.Router
 
+func TestMain(m *testing.M) {
+	setUp()
+	code := m.Run()
+	os.Exit(code)
+}
+
+func setUp() {
+	a = new(App)
+	router = mux.NewRouter()
+	subRouter = router.PathPrefix("/post").Subrouter()
+}
+
+func TestCreatePost(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockPost := appMocks.NewMockPostIface(ctrl)
-	mockPost.EXPECT().CreatePost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mongo.InsertOneResult{InsertedID: 123456}, nil).Times(1)
+	mP := appMocks.NewMockPost(ctrl)
+	mP.EXPECT().CreateOneRecord(a.mCl, "fakeDB", "fakeCollection").Return(nil)
 
-	subRouter.HandleFunc("/", a.handleCreatePost(mockPost, "fakeDB", "fakeCollection")).Methods("POST")
+	subRouter.HandleFunc("/", a.handleCreatePost(mP, "fakeDB", "fakeCollection")).Methods("POST")
 
 	w := httptest.NewRecorder()
-	json := strings.NewReader(`{"content":"updated post", "author":"gus bast"}`)
-	r, err := http.NewRequest("POST", "/post/", json)
+	jsonBody := strings.NewReader(`{"content":"fake content", "author":"fake author"}`)
+	r, err := http.NewRequest("POST", "/post/", jsonBody)
 	router.ServeHTTP(w, r)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, w.Code)
+
+	b, err := io.ReadAll(w.Body)
+	assert.NoError(t, err)
+	assert.EqualValues(t, `{"msj":"post created"}`, strings.TrimSuffix(string(b), "\n"))
 }
 
 func TestGetPost(t *testing.T) {
-	// TODO
-	var a App
-	router := mux.NewRouter()
-	subRouter := router.PathPrefix("/post").Subrouter()
-
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	mockPost := appMocks.NewMockPostIface(ctrl)
-	mockPost.EXPECT().GetPost(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mongo.SingleResult{}).Times(1)
+	mP := appMocks.NewMockPost(ctrl)
+	testIdHex := "63cefca7da1c1470664ec41c"
+	objId, _ := primitive.ObjectIDFromHex(testIdHex)
+	mP.EXPECT().ReadOneRecord(gomock.Any(), objId, gomock.Any(), gomock.Any()).DoAndReturn(func(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) (*appDb.PostDoc, error) {
+		p := &appDb.PostDoc{
+			Id:      objId,
+			Content: "fake content",
+			Author:  "fake author",
+		}
+		return p, nil
+	})
 
-	subRouter.HandleFunc("/", a.handleGetPost(mockPost, "fakeDB", "fakeCollection")).Methods("GET")
+	subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(mP, "fakeDB", "fakeCollection")).Methods("GET")
 
 	w := httptest.NewRecorder()
-	r, err := http.NewRequest("GET", "/posts/123456", nil)
+	url := fmt.Sprintf("/post/%v", testIdHex)
+	r, err := http.NewRequest("GET", url, nil)
 	router.ServeHTTP(w, r)
 
 	assert.NoError(t, err)
