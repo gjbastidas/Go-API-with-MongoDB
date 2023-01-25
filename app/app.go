@@ -59,9 +59,8 @@ func (a *App) serve() {
 	pSbr := r.PathPrefix("/post").Subrouter()
 	pSbr.HandleFunc("/", a.handleCreatePost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("POST")
 	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("GET")
-	// TODO update and delete handlers
-	// pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("PUT")
-	// pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("DELETE")
+	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handlePutPost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("PUT")
+	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("DELETE")
 
 	// http server configs
 	srv := &http.Server{
@@ -133,10 +132,44 @@ func (a *App) handleGetPost(p appDb.Post, dbName, colName string) http.HandlerFu
 	}
 }
 
-// TODO update and delete handlers
-// func (a *App) handlePutPost(p appDb.Post, dbName, colName string) http.HandlerFunc {}
+func (a *App) handlePutPost(p appDb.Post, dbName, colName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		objId, err := primitive.ObjectIDFromHex(vars["id"])
+		if err != nil {
+			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
+		}
 
-// func (a *App) handleDeletePost(p appDb.Post, dbName, colName string) http.HandlerFunc {}
+		err = json.NewDecoder(r.Body).Decode(&p)
+		if err != nil {
+			jsonPrintError(w, http.StatusBadRequest, err.Error(), "cannot decode body")
+			return
+		}
+
+		err = p.UpdateOneRecord(a.mCl, objId, dbName, colName)
+		if err != nil {
+			jsonPrintError(w, http.StatusBadRequest, err.Error(), "cannot decode post")
+		}
+
+		jsonPrint(w, http.StatusOK, map[string]string{"msj": "post updated"})
+	}
+}
+
+func (a *App) handleDeletePost(p appDb.Post, dbName, colName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		objId, err := primitive.ObjectIDFromHex(vars["id"])
+		if err != nil {
+			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
+		}
+
+		err = p.DeleteOneRecord(a.mCl, objId, dbName, colName)
+		if err != nil {
+			jsonPrintError(w, http.StatusBadRequest, err.Error(), "cannot decode post")
+		}
+		jsonPrint(w, http.StatusOK, map[string]string{"msj": "post deleted"})
+	}
+}
 
 // jsonPrint prints output in json format
 func jsonPrint(w http.ResponseWriter, code int, res any) {
@@ -148,7 +181,7 @@ func jsonPrint(w http.ResponseWriter, code int, res any) {
 	}
 }
 
-// jsonPrintError error log to server console and prints error in json format
+// jsonPrintError error log to server console and prints out error in json format
 func jsonPrintError(w http.ResponseWriter, code int, errMsj, consoleMsj string) {
 	klog.Errorf(consoleMsj+" : %v", errMsj)
 	jsonPrint(w, code, map[string]string{"error": errMsj})
