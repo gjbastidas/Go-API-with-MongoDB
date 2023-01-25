@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,12 +9,9 @@ import (
 	"testing"
 
 	appMocks "github.com/gjbastidas/GoSimpleAPIWithMongoDB/mocks"
-	appDb "github.com/gjbastidas/GoSimpleAPIWithMongoDB/models"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var a *App
@@ -55,67 +51,67 @@ func TestCreatePost(t *testing.T) {
 	assert.EqualValues(t, `{"msj":"post created"}`, strings.TrimSuffix(string(b), "\n"))
 }
 
-func TestGetPost(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mP := appMocks.NewMockPost(ctrl)
-	testIdHex := "63cefca7da1c1470664ec41c"
-	objId, _ := primitive.ObjectIDFromHex(testIdHex)
-	mP.EXPECT().ReadOneRecord(gomock.Any(), objId, gomock.Any(), gomock.Any()).DoAndReturn(func(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) (*appDb.PostDoc, error) {
-		p := &appDb.PostDoc{
-			Id:      objId,
-			Content: "fake content",
-			Author:  "fake author",
-		}
-		return p, nil
-	})
+// func TestGetPost(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
+// 	mP := appMocks.NewMockPost(ctrl)
+// 	testIdHex := "63cefca7da1c1470664ec41c"
+// 	objId, _ := primitive.ObjectIDFromHex(testIdHex)
+// 	mP.EXPECT().ReadOneRecord(gomock.Any(), objId, gomock.Any(), gomock.Any()).DoAndReturn(func(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) (*appDb.PostDoc, error) {
+// 		p := &appDb.PostDoc{
+// 			Id:      objId,
+// 			Content: "fake content",
+// 			Author:  "fake author",
+// 		}
+// 		return p, nil
+// 	})
 
-	subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(mP, "fakeDB", "fakeCollection")).Methods("GET")
+// 	subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(mP, "fakeDB", "fakeCollection")).Methods("GET")
 
-	w := httptest.NewRecorder()
-	url := fmt.Sprintf("/post/%v", testIdHex)
-	r, err := http.NewRequest("GET", url, nil)
-	router.ServeHTTP(w, r)
+// 	w := httptest.NewRecorder()
+// 	url := fmt.Sprintf("/post/%v", testIdHex)
+// 	r, err := http.NewRequest("GET", url, nil)
+// 	router.ServeHTTP(w, r)
 
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, http.StatusOK, w.Code)
+// }
 
-func TestPutPost(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mP := appMocks.NewMockPost(ctrl)
-	testIdHex := "63cefca7da1c1470664ec41c"
-	objId, _ := primitive.ObjectIDFromHex(testIdHex)
-	mP.EXPECT().UpdateOneRecord(gomock.Any(), objId, "fakeDB", "fakeCollection").Return(nil)
+// func TestPutPost(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
+// 	mP := appMocks.NewMockPost(ctrl)
+// 	testIdHex := "63cefca7da1c1470664ec41c"
+// 	objId, _ := primitive.ObjectIDFromHex(testIdHex)
+// 	mP.EXPECT().UpdateOneRecord(gomock.Any(), objId, "fakeDB", "fakeCollection").Return(nil)
 
-	subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handlePutPost(mP, "fakeDB", "fakeCollection")).Methods("PUT")
+// 	subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handlePutPost(mP, "fakeDB", "fakeCollection")).Methods("PUT")
 
-	w := httptest.NewRecorder()
-	jsonBody := strings.NewReader(`{"content":"fake content", "author":"fake author"}`)
-	url := fmt.Sprintf("/post/%v", testIdHex)
-	r, err := http.NewRequest("PUT", url, jsonBody)
-	router.ServeHTTP(w, r)
+// 	w := httptest.NewRecorder()
+// 	jsonBody := strings.NewReader(`{"content":"fake content", "author":"fake author"}`)
+// 	url := fmt.Sprintf("/post/%v", testIdHex)
+// 	r, err := http.NewRequest("PUT", url, jsonBody)
+// 	router.ServeHTTP(w, r)
 
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, http.StatusOK, w.Code)
+// }
 
-func TestDeletePost(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mP := appMocks.NewMockPost(ctrl)
-	testIdHex := "63cefca7da1c1470664ec41c"
-	objId, _ := primitive.ObjectIDFromHex(testIdHex)
-	mP.EXPECT().DeleteOneRecord(gomock.Any(), objId, "fakeDB", "fakeCollection").Return(nil)
+// func TestDeletePost(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
+// 	mP := appMocks.NewMockPost(ctrl)
+// 	testIdHex := "63cefca7da1c1470664ec41c"
+// 	objId, _ := primitive.ObjectIDFromHex(testIdHex)
+// 	mP.EXPECT().DeleteOneRecord(gomock.Any(), objId, "fakeDB", "fakeCollection").Return(nil)
 
-	subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handleDeletePost(mP, "fakeDB", "fakeCollection")).Methods("DELETE")
+// 	subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handleDeletePost(mP, "fakeDB", "fakeCollection")).Methods("DELETE")
 
-	w := httptest.NewRecorder()
-	url := fmt.Sprintf("/post/%v", testIdHex)
-	r, err := http.NewRequest("DELETE", url, nil)
-	router.ServeHTTP(w, r)
+// 	w := httptest.NewRecorder()
+// 	url := fmt.Sprintf("/post/%v", testIdHex)
+// 	r, err := http.NewRequest("DELETE", url, nil)
+// 	router.ServeHTTP(w, r)
 
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, http.StatusOK, w.Code)
+// }

@@ -1,4 +1,4 @@
-@host = 127.0.0.1:8080
+@host = 127.0.0.1:8088
 @contentType = application/json
 
 POST http://{{host}}/post/
@@ -6,8 +6,23 @@ content-type: {{contentType}}
 
 {
   "content": "my first post",
-  "author": "gustavo bastidas"
+  "author": "some author"
 }
 
 ###
-GET http://{{host}}/post/63cefca7da1c1470664ec41c
+@id = 63cefca7da1c1470664ec41c
+GET http://{{host}}/post/{{id}}
+
+###
+@id = 63cefca7da1c1470664ec41c
+PUT http://{{host}}/post/{{id}}
+content-type: {{contentType}}
+
+{
+  "content": "updated post",
+  "author": "some author"
+}
+
+###
+@id = 63cefca7da1c1470664ec41c
+DELETE http://{{host}}/post/{{id}}

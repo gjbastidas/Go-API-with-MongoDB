@@ -5,11 +5,11 @@ import (
 )
 
 type AppConfig struct {
-	SvrAddr    string `envconfig:"SVR_ADDR" default:":8080" required:"true"`
+	SvrAddr    string `envconfig:"SVR_ADDR" default:":8088" required:"true"`
 	DbUsername string `envconfig:"DB_USERNAME" default:"admin" required:"true"`
 	DbPassword string `envconfig:"DB_PASSWORD" default:"secret" required:"true"`
 	DbHost     string `envconfig:"DB_HOST" default:"localhost" required:"true"`
-	DbPort     string `envconfig:"DB_PORT" default:"27017" required:"true"`
+	DbPort     string `envconfig:"DB_PORT" default:"27018" required:"true"`
 	DbName     string `envconfig:"DB_NAME" default:"simple-api-with-mongodb" required:"true"`
 }
 

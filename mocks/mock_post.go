@@ -36,59 +36,59 @@ func (m *MockPost) EXPECT() *MockPostMockRecorder {
 	return m.recorder
 }
 
-// CreateOneRecord mocks base method.
-func (m *MockPost) CreateOneRecord(arg0 *mongo.Client, arg1, arg2 string) error {
+// CreatePost mocks base method.
+func (m *MockPost) CreatePost(arg0 *mongo.Client, arg1, arg2 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateOneRecord", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CreatePost", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// CreateOneRecord indicates an expected call of CreateOneRecord.
-func (mr *MockPostMockRecorder) CreateOneRecord(arg0, arg1, arg2 interface{}) *gomock.Call {
+// CreatePost indicates an expected call of CreatePost.
+func (mr *MockPostMockRecorder) CreatePost(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOneRecord", reflect.TypeOf((*MockPost)(nil).CreateOneRecord), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePost", reflect.TypeOf((*MockPost)(nil).CreatePost), arg0, arg1, arg2)
 }
 
-// DeleteOneRecord mocks base method.
-func (m *MockPost) DeleteOneRecord(arg0 *mongo.Client, arg1 primitive.ObjectID, arg2, arg3 string) error {
+// DeletePost mocks base method.
+func (m *MockPost) DeletePost(arg0 *mongo.Client, arg1 primitive.ObjectID, arg2, arg3 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteOneRecord", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "DeletePost", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeleteOneRecord indicates an expected call of DeleteOneRecord.
-func (mr *MockPostMockRecorder) DeleteOneRecord(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+// DeletePost indicates an expected call of DeletePost.
+func (mr *MockPostMockRecorder) DeletePost(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteOneRecord", reflect.TypeOf((*MockPost)(nil).DeleteOneRecord), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePost", reflect.TypeOf((*MockPost)(nil).DeletePost), arg0, arg1, arg2, arg3)
 }
 
-// ReadOneRecord mocks base method.
-func (m *MockPost) ReadOneRecord(arg0 *mongo.Client, arg1 primitive.ObjectID, arg2, arg3 string) (*models.PostDoc, error) {
+// ReadPost mocks base method.
+func (m *MockPost) ReadPost(arg0 *mongo.Client, arg1 primitive.ObjectID, arg2, arg3 string) (*models.PostDoc, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadOneRecord", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "ReadPost", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*models.PostDoc)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ReadOneRecord indicates an expected call of ReadOneRecord.
-func (mr *MockPostMockRecorder) ReadOneRecord(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+// ReadPost indicates an expected call of ReadPost.
+func (mr *MockPostMockRecorder) ReadPost(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadOneRecord", reflect.TypeOf((*MockPost)(nil).ReadOneRecord), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadPost", reflect.TypeOf((*MockPost)(nil).ReadPost), arg0, arg1, arg2, arg3)
 }
 
-// UpdateOneRecord mocks base method.
-func (m *MockPost) UpdateOneRecord(arg0 *mongo.Client, arg1 primitive.ObjectID, arg2, arg3 string) error {
+// UpdatePost mocks base method.
+func (m *MockPost) UpdatePost(arg0 *mongo.Client, arg1 primitive.ObjectID, arg2, arg3 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateOneRecord", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "UpdatePost", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// UpdateOneRecord indicates an expected call of UpdateOneRecord.
-func (mr *MockPostMockRecorder) UpdateOneRecord(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+// UpdatePost indicates an expected call of UpdatePost.
+func (mr *MockPostMockRecorder) UpdatePost(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOneRecord", reflect.TypeOf((*MockPost)(nil).UpdateOneRecord), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePost", reflect.TypeOf((*MockPost)(nil).UpdatePost), arg0, arg1, arg2, arg3)
 }

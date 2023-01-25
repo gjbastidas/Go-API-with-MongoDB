@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,17 +15,14 @@ import (
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"k8s.io/klog"
 )
 
-// App defines the application
 type App struct {
 	mCl *mongo.Client
 	cfg *env.AppConfig
 }
 
-// New App's constructor
 func New() *App {
 	a := new(App)
 	var err error
@@ -37,12 +33,8 @@ func New() *App {
 		klog.Fatalf("bad application configuration. error: %v", err)
 	}
 
-	// set mongodb client and ping db
-	connStr := fmt.Sprintf("mongodb://%v:%v@%v:%v/?authSource=%v", a.cfg.DbUsername, a.cfg.DbPassword, a.cfg.DbHost, a.cfg.DbPort, a.cfg.DbUsername)
-	mClientOpts := options.Client().ApplyURI(connStr)
-	ctx, cancel := context.WithTimeout(context.TODO(), appConstants.RequestTimeout)
-	defer cancel()
-	a.mCl, err = mongo.Connect(ctx, mClientOpts)
+	// set mongodb client
+	a.mCl, err = appDb.New(a.cfg.DbUsername, a.cfg.DbPassword, a.cfg.DbHost, a.cfg.DbPort)
 	if err != nil {
 		klog.Fatalf("cannot set mongodb client: %v", err)
 	}
@@ -105,7 +97,7 @@ func (a *App) handleCreatePost(p appDb.Post, dbName, colName string) http.Handle
 			return
 		}
 
-		err = p.CreateOneRecord(a.mCl, dbName, colName)
+		err = p.CreatePost(a.mCl, dbName, colName)
 		if err != nil {
 			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot create post")
 			return
@@ -123,7 +115,7 @@ func (a *App) handleGetPost(p appDb.Post, dbName, colName string) http.HandlerFu
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
 		}
 
-		res, err := p.ReadOneRecord(a.mCl, objId, dbName, colName)
+		res, err := p.ReadPost(a.mCl, objId, dbName, colName)
 		if err != nil {
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "cannot decode post")
 		}
@@ -146,7 +138,7 @@ func (a *App) handlePutPost(p appDb.Post, dbName, colName string) http.HandlerFu
 			return
 		}
 
-		err = p.UpdateOneRecord(a.mCl, objId, dbName, colName)
+		err = p.UpdatePost(a.mCl, objId, dbName, colName)
 		if err != nil {
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "cannot decode post")
 		}
@@ -163,26 +155,10 @@ func (a *App) handleDeletePost(p appDb.Post, dbName, colName string) http.Handle
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
 		}
 
-		err = p.DeleteOneRecord(a.mCl, objId, dbName, colName)
+		err = p.DeletePost(a.mCl, objId, dbName, colName)
 		if err != nil {
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "cannot decode post")
 		}
 		jsonPrint(w, http.StatusOK, map[string]string{"msj": "post deleted"})
 	}
-}
-
-// jsonPrint prints output in json format
-func jsonPrint(w http.ResponseWriter, code int, res any) {
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(code)
-	err := json.NewEncoder(w).Encode(res)
-	if err != nil {
-		klog.Errorf("cannot encode response: %v", err)
-	}
-}
-
-// jsonPrintError error log to server console and prints out error in json format
-func jsonPrintError(w http.ResponseWriter, code int, errMsj, consoleMsj string) {
-	klog.Errorf(consoleMsj+" : %v", errMsj)
-	jsonPrint(w, code, map[string]string{"error": errMsj})
 }

@@ -23,7 +23,9 @@ go-test: go-gen-mocks
 
 go-gen-mocks:
 	@ cd ${BASE_DIR}/models && \
-		${GOPATH}/bin/mockgen -destination=${BASE_DIR}/mocks/mock_post.go -package=mocks . Post
+		${GOPATH}/bin/mockgen -destination=${BASE_DIR}/mocks/mock_post.go -package=mocks . Post && \
+		${GOPATH}/bin/mockgen -destination=${BASE_DIR}/mocks/mock_comment.go -package=mocks . Comment && \
+		echo "mocks generated"
 .PHONY: go-gen-mocks
 
 go-lint:
