@@ -24,7 +24,7 @@ func TestHandleCreatePost(t *testing.T) {
 		{
 			name:             "happy-path",
 			collection:       "fakePostCol",
-			expectedResponse: `{"msj":"post created"}`,
+			expectedResponse: `{"InsertedID":"89372c88c133e1e4deb0e10a"}`,
 			expectedCode:     http.StatusCreated,
 		},
 		{
@@ -80,6 +80,13 @@ func TestHandleGetPost(t *testing.T) {
 			postIdHex:        "89372c88c133e1e4deb0e10a",
 			expectedResponse: `{"error":"dummy error"}`,
 			expectedCode:     http.StatusInternalServerError,
+		},
+		{
+			name:             "return-error-no-docs",
+			collection:       "NoDocs",
+			postIdHex:        "89372c88c133e1e4deb0e10a",
+			expectedResponse: `{"error":"mongo: no documents in result"}`,
+			expectedCode:     http.StatusNotFound,
 		},
 		{
 			name:             "return-error-invalid-hex-id",
@@ -138,6 +145,13 @@ func TestHandlePutPost(t *testing.T) {
 			expectedCode:     http.StatusInternalServerError,
 		},
 		{
+			name:             "no-docs",
+			collection:       "NoDocs",
+			postIdHex:        "89372c88c133e1e4deb0e10a",
+			expectedResponse: `{"error":"mongo: no documents in result"}`,
+			expectedCode:     http.StatusNotFound,
+		},
+		{
 			name:             "return-error-invalid-hex-id",
 			collection:       "fakePostCol",
 			postIdHex:        "12345",
@@ -192,6 +206,13 @@ func TestHandleDeletePost(t *testing.T) {
 			postIdHex:        "89372c88c133e1e4deb0e10a",
 			expectedResponse: `{"error":"dummy error"}`,
 			expectedCode:     http.StatusInternalServerError,
+		},
+		{
+			name:             "no-docs",
+			collection:       "NoDocs",
+			postIdHex:        "89372c88c133e1e4deb0e10a",
+			expectedResponse: `{"error":"mongo: no documents in result"}`,
+			expectedCode:     http.StatusNotFound,
 		},
 		{
 			name:             "return-error-invalid-hex-id",

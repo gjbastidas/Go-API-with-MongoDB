@@ -12,29 +12,34 @@ import (
 // TODO: create MockComment
 
 const (
-	fakeDbName  = "fakeDb"
-	fakePostCol = "fakePostCol"
+	fakeDbName   = "fakeDb"
+	fakePostCol  = "fakePostCol"
+	fakeObjIdHex = "89372c88c133e1e4deb0e10a"
 )
 
 type MockPost struct {
-	Id         primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Content    string             `json:"content,omitempty" bson:"content,omitempty"`
-	Author     string             `json:"author,omitempty" bson:"author,omitempty"`
-	Database   string
-	Collection string
 }
 
-func (mP *MockPost) CreatePost(mCl *mongo.Client, dbName, colName string) error {
-	if dbName == fakeDbName && colName != fakePostCol {
-		return errors.New("dummy error")
+func (mP *MockPost) CreatePost(mCl *mongo.Client, dbName, colName string) (*mongo.InsertOneResult, error) {
+	if dbName == fakeDbName {
+		out := &mongo.InsertOneResult{}
+		if colName != fakePostCol {
+			return out, errors.New("dummy error")
+		}
+		objId, _ := primitive.ObjectIDFromHex(fakeObjIdHex)
+		out.InsertedID = objId
+		return out, nil
 	}
-	return nil
+	return &mongo.InsertOneResult{}, nil
 }
 
 func (mP *MockPost) ReadPost(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) (*appDb.PostDoc, error) {
 	if dbName == fakeDbName {
 		out := new(appDb.PostDoc)
 		if colName != fakePostCol {
+			if colName == "NoDocs" {
+				return out, mongo.ErrNoDocuments
+			}
 			return out, errors.New("dummy error")
 		}
 		res, _ := bson.Marshal(bson.M{"_id": objId, "content": "fake content", "author": "fake author"})
@@ -46,6 +51,9 @@ func (mP *MockPost) ReadPost(mCl *mongo.Client, objId primitive.ObjectID, dbName
 
 func (mP *MockPost) UpdatePost(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) error {
 	if dbName == fakeDbName && colName != fakePostCol {
+		if colName == "NoDocs" {
+			return mongo.ErrNoDocuments
+		}
 		return errors.New("dummy error")
 	}
 	return nil
@@ -53,6 +61,9 @@ func (mP *MockPost) UpdatePost(mCl *mongo.Client, objId primitive.ObjectID, dbNa
 
 func (mP *MockPost) DeletePost(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) error {
 	if dbName == fakeDbName && colName != fakePostCol {
+		if colName == "NoDocs" {
+			return mongo.ErrNoDocuments
+		}
 		return errors.New("dummy error")
 	}
 	return nil

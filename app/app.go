@@ -41,6 +41,14 @@ func New() *App {
 		klog.Fatalf("cannot set mongodb client: %v", err)
 	}
 
+	// ping db
+	ctx, cancel := context.WithTimeout(context.Background(), appConstants.RequestTimeout)
+	defer cancel()
+	err = a.mCl.Ping(ctx, nil)
+	if err != nil {
+		klog.Fatal(err)
+	}
+
 	a.serve()
 	return a
 }
@@ -99,13 +107,13 @@ func (a *App) handleCreatePost(p appDb.Post, dbName, colName string) http.Handle
 			return
 		}
 
-		err = p.CreatePost(a.mCl, dbName, colName)
+		res, err := p.CreatePost(a.mCl, dbName, colName)
 		if err != nil {
 			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot create post")
 			return
 		}
 
-		jsonPrint(w, http.StatusCreated, map[string]string{"msj": "post created"})
+		jsonPrint(w, http.StatusCreated, res)
 	}
 }
 
@@ -120,8 +128,14 @@ func (a *App) handleGetPost(p appDb.Post, dbName, colName string) http.HandlerFu
 
 		res, err := p.ReadPost(a.mCl, objId, dbName, colName)
 		if err != nil {
-			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot decode post")
-			return
+			switch err {
+			case mongo.ErrNoDocuments:
+				jsonPrintError(w, http.StatusNotFound, err.Error(), "post not found")
+				return
+			default:
+				jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot read post")
+				return
+			}
 		}
 
 		jsonPrint(w, http.StatusOK, res)
@@ -135,6 +149,18 @@ func (a *App) handlePutPost(p appDb.Post, dbName, colName string) http.HandlerFu
 		if err != nil {
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
 			return
+		}
+
+		_, err = p.ReadPost(a.mCl, objId, dbName, colName)
+		if err != nil {
+			switch err {
+			case mongo.ErrNoDocuments:
+				jsonPrintError(w, http.StatusNotFound, err.Error(), "post not found")
+				return
+			default:
+				jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot read post")
+				return
+			}
 		}
 
 		err = json.NewDecoder(r.Body).Decode(&p)
@@ -162,9 +188,21 @@ func (a *App) handleDeletePost(p appDb.Post, dbName, colName string) http.Handle
 			return
 		}
 
+		_, err = p.ReadPost(a.mCl, objId, dbName, colName)
+		if err != nil {
+			switch err {
+			case mongo.ErrNoDocuments:
+				jsonPrintError(w, http.StatusNotFound, err.Error(), "post not found")
+				return
+			default:
+				jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot read post")
+				return
+			}
+		}
+
 		err = p.DeletePost(a.mCl, objId, dbName, colName)
 		if err != nil {
-			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot decode post")
+			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot delete post")
 			return
 		}
 

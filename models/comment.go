@@ -12,7 +12,7 @@ type CommentDoc struct {
 	PostId  primitive.ObjectID `json:"post,omitempty" bson:"post,omitempty"`
 }
 
-func (c *CommentDoc) CreateComment(mCl *mongo.Client, dbName, colName string) error {
+func (c *CommentDoc) CreateComment(mCl *mongo.Client, dbName, colName string) (*mongo.InsertOneResult, error) {
 	return createOneRecord(mCl, c, dbName, colName)
 }
 

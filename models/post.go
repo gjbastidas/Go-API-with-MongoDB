@@ -11,7 +11,7 @@ type PostDoc struct {
 	Author  string             `json:"author,omitempty" bson:"author,omitempty"`
 }
 
-func (p *PostDoc) CreatePost(mCl *mongo.Client, dbName, colName string) error {
+func (p *PostDoc) CreatePost(mCl *mongo.Client, dbName, colName string) (*mongo.InsertOneResult, error) {
 	return createOneRecord(mCl, p, dbName, colName)
 }
 

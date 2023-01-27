@@ -100,7 +100,7 @@ curl http://localhost:8088/post/<<replace with id>>
 
 Update a post
 ```shell
-curl -X PUT http://localhost:8088/post/<<replace with id>>
+curl -X PUT http://localhost:8088/post/<<replace with id>> \
   -H 'Content-Type: application/json' \
   -d '{"content": "updated post","author": "some author"}'
 ```

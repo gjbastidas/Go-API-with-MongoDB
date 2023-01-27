@@ -18,16 +18,14 @@ type AnyDoc interface {
 func NewClient(DbUsername, DbPassword, DbHost, DbPort string) (*mongo.Client, error) {
 	connStr := fmt.Sprintf("mongodb://%v:%v@%v:%v/?authSource=%v", DbUsername, DbPassword, DbHost, DbPort, DbUsername)
 	mClientOpts := options.Client().ApplyURI(connStr)
-	ctx, cancel := context.WithTimeout(context.TODO(), appConstants.RequestTimeout)
-	defer cancel()
-	return mongo.Connect(ctx, mClientOpts)
+	return mongo.Connect(context.TODO(), mClientOpts)
 }
 
-func createOneRecord[D AnyDoc](mCl *mongo.Client, d D, dbName, colName string) error {
+func createOneRecord[D AnyDoc](mCl *mongo.Client, d D, dbName, colName string) (*mongo.InsertOneResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), appConstants.RequestTimeout)
 	defer cancel()
-	_, err := mCl.Database(dbName).Collection(colName).InsertOne(ctx, d)
-	return err
+	res, err := mCl.Database(dbName).Collection(colName).InsertOne(ctx, d)
+	return res, err
 }
 
 func readOneRecord[D AnyDoc](mCl *mongo.Client, d D, objId primitive.ObjectID, dbName, colName string) (D, error) {
