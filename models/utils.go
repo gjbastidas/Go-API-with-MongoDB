@@ -15,7 +15,7 @@ type AnyDoc interface {
 	*PostDoc | *CommentDoc
 }
 
-func New(DbUsername, DbPassword, DbHost, DbPort string) (*mongo.Client, error) {
+func NewClient(DbUsername, DbPassword, DbHost, DbPort string) (*mongo.Client, error) {
 	connStr := fmt.Sprintf("mongodb://%v:%v@%v:%v/?authSource=%v", DbUsername, DbPassword, DbHost, DbPort, DbUsername)
 	mClientOpts := options.Client().ApplyURI(connStr)
 	ctx, cancel := context.WithTimeout(context.TODO(), appConstants.RequestTimeout)

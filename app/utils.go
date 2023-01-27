@@ -19,6 +19,6 @@ func jsonPrint(w http.ResponseWriter, code int, res any) {
 
 // jsonPrintError error log to server console and prints out error in json format
 func jsonPrintError(w http.ResponseWriter, code int, errMsj, consoleMsj string) {
-	klog.Errorf(consoleMsj+" : %v", errMsj)
+	klog.Errorf(consoleMsj+": %v", errMsj)
 	jsonPrint(w, code, map[string]string{"error": errMsj})
 }

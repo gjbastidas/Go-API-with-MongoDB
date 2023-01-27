@@ -5,13 +5,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type Comment interface {
-	CreateComment(mCl *mongo.Client, dbName, colName string) error
-	ReadComment(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) (*CommentDoc, error)
-	UpdateComment(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) error
-	DeleteComment(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) error
-}
-
 type CommentDoc struct {
 	Id      primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
 	Content string             `json:"content,omitempty" bson:"content,omitempty"`

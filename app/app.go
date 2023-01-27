@@ -18,6 +18,8 @@ import (
 	"k8s.io/klog"
 )
 
+// TODO: create Comment handlers
+
 type App struct {
 	mCl *mongo.Client
 	cfg *env.AppConfig
@@ -34,7 +36,7 @@ func New() *App {
 	}
 
 	// set mongodb client
-	a.mCl, err = appDb.New(a.cfg.DbUsername, a.cfg.DbPassword, a.cfg.DbHost, a.cfg.DbPort)
+	a.mCl, err = appDb.NewClient(a.cfg.DbUsername, a.cfg.DbPassword, a.cfg.DbHost, a.cfg.DbPort)
 	if err != nil {
 		klog.Fatalf("cannot set mongodb client: %v", err)
 	}
@@ -49,10 +51,10 @@ func (a *App) serve() {
 	r := mux.NewRouter()
 
 	pSbr := r.PathPrefix("/post").Subrouter()
-	pSbr.HandleFunc("/", a.handleCreatePost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("POST")
-	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("GET")
-	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handlePutPost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("PUT")
-	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(&appDb.PostDoc{}, a.cfg.DbName, "posts")).Methods("DELETE")
+	pSbr.HandleFunc("/", a.handleCreatePost(new(appDb.PostDoc), a.cfg.DbName, appConstants.PColl)).Methods("POST")
+	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(new(appDb.PostDoc), a.cfg.DbName, appConstants.PColl)).Methods("GET")
+	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handlePutPost(new(appDb.PostDoc), a.cfg.DbName, appConstants.PColl)).Methods("PUT")
+	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleDeletePost(new(appDb.PostDoc), a.cfg.DbName, appConstants.PColl)).Methods("DELETE")
 
 	// http server configs
 	srv := &http.Server{
@@ -113,11 +115,13 @@ func (a *App) handleGetPost(p appDb.Post, dbName, colName string) http.HandlerFu
 		objId, err := primitive.ObjectIDFromHex(vars["id"])
 		if err != nil {
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
+			return
 		}
 
 		res, err := p.ReadPost(a.mCl, objId, dbName, colName)
 		if err != nil {
-			jsonPrintError(w, http.StatusBadRequest, err.Error(), "cannot decode post")
+			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot decode post")
+			return
 		}
 
 		jsonPrint(w, http.StatusOK, res)
@@ -130,6 +134,7 @@ func (a *App) handlePutPost(p appDb.Post, dbName, colName string) http.HandlerFu
 		objId, err := primitive.ObjectIDFromHex(vars["id"])
 		if err != nil {
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
+			return
 		}
 
 		err = json.NewDecoder(r.Body).Decode(&p)
@@ -140,7 +145,8 @@ func (a *App) handlePutPost(p appDb.Post, dbName, colName string) http.HandlerFu
 
 		err = p.UpdatePost(a.mCl, objId, dbName, colName)
 		if err != nil {
-			jsonPrintError(w, http.StatusBadRequest, err.Error(), "cannot decode post")
+			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot update post")
+			return
 		}
 
 		jsonPrint(w, http.StatusOK, map[string]string{"msj": "post updated"})
@@ -153,12 +159,15 @@ func (a *App) handleDeletePost(p appDb.Post, dbName, colName string) http.Handle
 		objId, err := primitive.ObjectIDFromHex(vars["id"])
 		if err != nil {
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
+			return
 		}
 
 		err = p.DeletePost(a.mCl, objId, dbName, colName)
 		if err != nil {
-			jsonPrintError(w, http.StatusBadRequest, err.Error(), "cannot decode post")
+			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot decode post")
+			return
 		}
+
 		jsonPrint(w, http.StatusOK, map[string]string{"msj": "post deleted"})
 	}
 }
