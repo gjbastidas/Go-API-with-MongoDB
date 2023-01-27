@@ -1,18 +1,41 @@
 BASE_DIR ?= ${PWD}
 MONGO_CONTAINER_NAME ?= simpleapiwithmongodb-db
-MONGO_HOST_PORT ?= 27018
 MONGO_VERSION ?= 6.0.3
-MONGO_USERNAME ?= admin
-MONGO_PASSWORD ?= secret
-DOCKER_IMG_NAME ?= simpleapiwithmongodb-api
+API_DOCKER_IMG_NAME ?= simpleapiwithmongodb-api
 API_CONTAINER_NAME ?= simpleapiwithmongodb-api
-API_HOST_PORT =? 8088
+API_HOST_PORT ?= 8088
+
+
+app-delete:
+	@ API_RUNNING=`docker container ls --filter name=${API_CONTAINER_NAME} --format '{{.Names}}'` && \
+		if [ ! -z "$$API_RUNNING" ]; then \
+			docker stop ${API_CONTAINER_NAME}; \
+		fi && \
+		echo "application stoppped" && \
+		make mongodb-stop
+.PHONY: app-delete
+
+app-run: docker-build mongodb-run
+	@ API_EXISTS=`docker container ls -a --filter name=${API_CONTAINER_NAME} --format '{{.Names}}'` && \
+		if [ -z "$$API_EXISTS" ]; then \
+			docker run --rm --name ${API_CONTAINER_NAME} -p ${API_HOST_PORT}:${API_HOST_PORT} \
+				-e DB_USERNAME=$$DB_USERNAME -e DB_PASSWORD=$$DB_PASSWORD -e DB_HOST=$$DB_HOST -e DB_PORT=$$DB_PORT \
+				--link ${MONGO_CONTAINER_NAME}:$$DB_HOST \
+				-d ${API_DOCKER_IMG_NAME} && docker container ls --filter name=${API_CONTAINER_NAME}; \
+		fi
+.PHONY: app-run
+
+docker-build: go-test
+	@ cd ${BASE_DIR} && \
+		docker build -t ${API_DOCKER_IMG_NAME}:latest .
+.PHONY: docker-build
 
 mongodb-stop:
 	@ MONGO_RUNNING=`docker container ls --filter name=${MONGO_CONTAINER_NAME} --format '{{.Names}}'` && \
 		if [ ! -z "$$MONGO_RUNNING" ]; then \
 			docker stop ${MONGO_CONTAINER_NAME}; \
-		fi
+		fi && \
+		echo "mongodb stoppped"
 .PHONY: mongodb-stop
 
 go-run: go-build mongodb-run
@@ -23,8 +46,8 @@ go-run: go-build mongodb-run
 mongodb-run:
 	@ MONGO_EXISTS=`docker container ls -a --filter name=${MONGO_CONTAINER_NAME} --format '{{.Names}}'` && \
 		if [ -z "$$MONGO_EXISTS" ]; then \
-			docker run --rm --name ${MONGO_CONTAINER_NAME} -p ${MONGO_HOST_PORT}:27017 \
-				-e MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME} -e MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD} \
+			docker run --rm --name ${MONGO_CONTAINER_NAME} -p $$DB_PORT:$$DB_PORT \
+				-e MONGO_INITDB_ROOT_USERNAME=$$DB_USERNAME -e MONGO_INITDB_ROOT_PASSWORD=$$DB_PASSWORD \
 				-d mongo:${MONGO_VERSION} && docker container ls --filter name=${MONGO_CONTAINER_NAME}; \
 		fi
 .PHONY: mongodb-run
@@ -35,26 +58,18 @@ go-build: go-test
 		CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -o "bin/app" main.go
 .PHONY: go-build
 
-docker-run: # TODO
-	@ API_EXISTS=`docker container ls -a --filter name=${API_CONTAINER_NAME} --format '{{.Names}}'` && \
-		if [ -z "$$API_EXISTS" ]; then \
-			docker run --rm --name ${API_CONTAINER_NAME} -p ${API_HOST_PORT}:${API_HOST_PORT} \
-				# -e SVR_ADDR=$$SVR_ADDR -e DB_USERNAME=$$DB_USERNAME -e DB_PASSWORD=$$DB_PASSWORD -e DB_HOST=$$DB_HOST -e DB_NAME=$$DB_NAME \
-				-d ${DOCKER_IMG_NAME} && docker container ls --filter name=${API_CONTAINER_NAME}; \
-		fi
-.PHONY: docker-run
-
-docker-build: # TODO
+go-test: go-lint
 	@ cd ${BASE_DIR} && \
-		docker build -t ${DOCKER_IMG_NAME}:latest .
-.PHONY: docker-build
-
-go-test:
-	@ cd ${BASE_DIR} && \
-		go test -v ./app -cover
+		go test ./app -cover
 .PHONY: go-test
 
-go-lint:
+go-lint: validate-envs
 	@ cd ${BASE_DIR} && \
-		golangci-lint run --timeout 360s
+		golangci-lint run --timeout 30s
 .PHONY: go-lint
+
+validate-envs:
+	@ if [ -z "$$DB_USERNAME" ] || [ -z "$$DB_PASSWORD" ] || [ -z "$$DB_HOST" ] || [ -z "$$DB_PORT" ]; then \
+			echo "check for empty envs"; \
+		fi
+.PHONY: validate-envs
