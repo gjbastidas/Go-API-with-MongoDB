@@ -1,6 +1,7 @@
-@host = 127.0.0.1:8088
+@host = localhost:8088
 @contentType = application/json
 
+### Create post
 POST http://{{host}}/post/
 content-type: {{contentType}}
 
@@ -9,13 +10,11 @@ content-type: {{contentType}}
   "author": "some author"
 }
 
-###
-@id = 63cefca7da1c1470664ec41c
-GET http://{{host}}/post/{{id}}
+### Get post
+GET http://{{host}}/post/<<replace with id>>
 
-###
-@id = 63cefca7da1c1470664ec41c
-PUT http://{{host}}/post/{{id}}
+### Update post
+PUT http://{{host}}/post/<<replace with id>>
 content-type: {{contentType}}
 
 {
@@ -23,6 +22,5 @@ content-type: {{contentType}}
   "author": "some author"
 }
 
-###
-@id = 63cefca7da1c1470664ec41c
-DELETE http://{{host}}/post/{{id}}
+### Delete post
+DELETE http://{{host}}/post/<<replace with id>>
