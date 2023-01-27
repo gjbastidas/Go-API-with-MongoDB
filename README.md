@@ -84,7 +84,6 @@ This last command should trigger the local pipeline to:
 3. Build the API docker image and run the API container
 
 ### 2. Interact with the API
-TODO: test curl
 The simplest way is by issuing CURL commands from your terminal:
 
 Create a post
