@@ -51,14 +51,14 @@ func (a *App) serve() {
 	r := mux.NewRouter()
 
 	pSbr := r.PathPrefix("/post").Subrouter()
-	pSbr.HandleFunc("/", a.handleCreatePost(new(appDb.PostDoc), a.cfg.DbName, appConstants.PColl)).Methods("POST")
-	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(new(appDb.PostDoc), a.cfg.DbName, appConstants.PColl)).Methods("GET")
-	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handlePutPost(new(appDb.PostDoc), a.cfg.DbName, appConstants.PColl)).Methods("PUT")
-	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleDeletePost(new(appDb.PostDoc), a.cfg.DbName, appConstants.PColl)).Methods("DELETE")
+	pSbr.HandleFunc("/", a.handleCreatePost(new(appDb.PostDoc), appConstants.DbName, appConstants.PColl)).Methods("POST")
+	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(new(appDb.PostDoc), appConstants.DbName, appConstants.PColl)).Methods("GET")
+	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handlePutPost(new(appDb.PostDoc), appConstants.DbName, appConstants.PColl)).Methods("PUT")
+	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleDeletePost(new(appDb.PostDoc), appConstants.DbName, appConstants.PColl)).Methods("DELETE")
 
 	// http server configs
 	srv := &http.Server{
-		Addr:    a.cfg.SvrAddr,
+		Addr:    ":8088",
 		Handler: r,
 	}
 
@@ -81,7 +81,7 @@ func (a *App) serve() {
 	}()
 
 	// start http server
-	klog.Infof("app started at %v", a.cfg.SvrAddr)
+	klog.Info("app started at :8088")
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		klog.Fatalf("server failed to start: %v", err)
 	}
