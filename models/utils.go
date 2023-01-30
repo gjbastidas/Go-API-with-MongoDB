@@ -12,14 +12,18 @@ import (
 )
 
 type Models struct {
-	P Post
-	C Comment
+	P        Post
+	PColName string
+	C        Comment
+	CColName string
 }
 
 func NewModels() *Models {
 	return &Models{
-		P: &PostDoc{},
-		C: &CommentDoc{},
+		P:        &PostDoc{},
+		PColName: appConstants.PColl,
+		C:        &CommentDoc{},
+		CColName: appConstants.CColl,
 	}
 }
 

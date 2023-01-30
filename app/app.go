@@ -63,10 +63,10 @@ func (a *App) serve() {
 	pSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleDeletePost(new(appDb.PostDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodDelete)
 
 	cSbr := r.PathPrefix("/comment").Subrouter()
-	cSbr.HandleFunc("/", a.handleCreateComment(appDb.NewModels(), appConstants.DbName, appConstants.PColl)).Methods(http.MethodPost)
-	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodGet)
-	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handlePutComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodPut)
-	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleDeleteComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodDelete)
+	cSbr.HandleFunc("/", a.handleCreateComment(appDb.NewModels(), appConstants.DbName)).Methods(http.MethodPost)
+	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.CColl)).Methods(http.MethodGet)
+	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handlePutComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.CColl)).Methods(http.MethodPut)
+	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleDeleteComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.CColl)).Methods(http.MethodDelete)
 
 	// http server configs
 	srv := &http.Server{
@@ -214,7 +214,7 @@ func (a *App) handleDeletePost(p appDb.Post, dbName, colName string) http.Handle
 	}
 }
 
-func (a *App) handleCreateComment(models *appDb.Models, dbName, colName string) http.HandlerFunc {
+func (a *App) handleCreateComment(models *appDb.Models, dbName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := json.NewDecoder(r.Body).Decode(models.C)
 		if err != nil {
@@ -228,7 +228,7 @@ func (a *App) handleCreateComment(models *appDb.Models, dbName, colName string) 
 			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
 			return
 		}
-		_, err = models.P.ReadPost(a.mCl, postId, dbName, colName)
+		_, err = models.P.ReadPost(a.mCl, postId, dbName, models.PColName)
 		if err != nil {
 			switch err {
 			case mongo.ErrNoDocuments:
@@ -240,7 +240,7 @@ func (a *App) handleCreateComment(models *appDb.Models, dbName, colName string) 
 			}
 		}
 
-		res, err := models.C.CreateComment(a.mCl, dbName, colName)
+		res, err := models.C.CreateComment(a.mCl, dbName, models.CColName)
 		if err != nil {
 			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot create comment on post with id: "+postId.String())
 			return

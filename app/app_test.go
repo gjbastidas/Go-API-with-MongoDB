@@ -274,7 +274,10 @@ func TestHandleCreateComment(t *testing.T) {
 			router := mux.NewRouter()
 			subRouter := router.PathPrefix("/comment").Subrouter()
 
-			subRouter.HandleFunc("/", a.handleCreateComment(NewMockModels(), "fakeDb", st.collection)).Methods(http.MethodPost)
+			mockModels := NewMockModels()
+			mockModels.CColName = st.collection
+			mockModels.PColName = fakePostCol
+			subRouter.HandleFunc("/", a.handleCreateComment(mockModels, fakeDbName)).Methods(http.MethodPost)
 
 			w := httptest.NewRecorder()
 			jsonBody := strings.NewReader(`{"content":"fake content", "author":"fake author", "postId":"89372c88c133e1e4deb0e10a"}`)
