@@ -11,14 +11,26 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type AnyDoc interface {
-	*PostDoc | *CommentDoc
+type Models struct {
+	P Post
+	C Comment
+}
+
+func NewModels() *Models {
+	return &Models{
+		P: &PostDoc{},
+		C: &CommentDoc{},
+	}
 }
 
 func NewClient(DbUsername, DbPassword, DbHost, DbPort string) (*mongo.Client, error) {
 	connStr := fmt.Sprintf("mongodb://%v:%v@%v:%v/?authSource=%v", DbUsername, DbPassword, DbHost, DbPort, DbUsername)
 	mClientOpts := options.Client().ApplyURI(connStr)
 	return mongo.Connect(context.TODO(), mClientOpts)
+}
+
+type AnyDoc interface {
+	*PostDoc | *CommentDoc
 }
 
 func createOneRecord[D AnyDoc](mCl *mongo.Client, d D, dbName, colName string) (*mongo.InsertOneResult, error) {

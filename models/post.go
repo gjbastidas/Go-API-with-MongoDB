@@ -5,6 +5,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type Post interface {
+	CreatePost(mCl *mongo.Client, dbName, colName string) (*mongo.InsertOneResult, error)
+	ReadPost(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) (*PostDoc, error)
+	UpdatePost(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) error
+	DeletePost(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) error
+}
+
 type PostDoc struct {
 	Id      primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
 	Content string             `json:"content,omitempty" bson:"content,omitempty"`

@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO: Test Comment handlers
-
 func TestHandleCreatePost(t *testing.T) {
 	subtests := []struct {
 		name             string
@@ -40,7 +38,7 @@ func TestHandleCreatePost(t *testing.T) {
 			a := new(App)
 			router := mux.NewRouter()
 			subRouter := router.PathPrefix("/post").Subrouter()
-			subRouter.HandleFunc("/", a.handleCreatePost(new(MockPost), "fakeDb", st.collection)).Methods("POST")
+			subRouter.HandleFunc("/", a.handleCreatePost(new(MockPost), "fakeDb", st.collection)).Methods(http.MethodPost)
 
 			w := httptest.NewRecorder()
 			jsonBody := strings.NewReader(`{"content":"fake content", "author":"fake author"}`)
@@ -103,7 +101,7 @@ func TestHandleGetPost(t *testing.T) {
 			router := mux.NewRouter()
 			subRouter := router.PathPrefix("/post").Subrouter()
 
-			subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(new(MockPost), "fakeDb", st.collection)).Methods("GET")
+			subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handleGetPost(new(MockPost), "fakeDb", st.collection)).Methods(http.MethodGet)
 
 			w := httptest.NewRecorder()
 			url := fmt.Sprintf("/post/%v", st.postIdHex)
@@ -234,6 +232,53 @@ func TestHandleDeletePost(t *testing.T) {
 			w := httptest.NewRecorder()
 			url := fmt.Sprintf("/post/%v", st.postIdHex)
 			r, err := http.NewRequest(http.MethodDelete, url, nil)
+			router.ServeHTTP(w, r)
+
+			if assert.NoError(t, err) {
+				assert.EqualValues(t, st.expectedCode, w.Code)
+			}
+
+			b, err := io.ReadAll(w.Body)
+			if assert.NoError(t, err) {
+				assert.EqualValues(t, st.expectedResponse, strings.TrimSuffix(string(b), "\n"))
+			}
+		})
+	}
+}
+
+func TestHandleCreateComment(t *testing.T) {
+	subtests := []struct {
+		name             string
+		collection       string
+		expectedResponse string
+		expectedCode     int
+	}{
+		{
+			name:             "happy-path",
+			collection:       "fakeCommentCol",
+			expectedResponse: `{"InsertedID":"bfc80a35195ed2079d97c43b"}`,
+			expectedCode:     http.StatusCreated,
+		},
+		{
+			name:             "return-error",
+			collection:       "fakeOtherCol",
+			expectedResponse: `{"error":"dummy error"}`,
+			expectedCode:     http.StatusInternalServerError,
+		},
+	}
+
+	for _, st := range subtests {
+		t.Run(st.name, func(t *testing.T) {
+			a := new(App)
+
+			router := mux.NewRouter()
+			subRouter := router.PathPrefix("/comment").Subrouter()
+
+			subRouter.HandleFunc("/", a.handleCreateComment(NewMockModels(), "fakeDb", st.collection)).Methods(http.MethodPost)
+
+			w := httptest.NewRecorder()
+			jsonBody := strings.NewReader(`{"content":"fake content", "author":"fake author", "postId":"89372c88c133e1e4deb0e10a"}`)
+			r, err := http.NewRequest("POST", "/comment/", jsonBody)
 			router.ServeHTTP(w, r)
 
 			if assert.NoError(t, err) {
