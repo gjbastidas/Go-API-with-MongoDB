@@ -418,3 +418,66 @@ func TestHandlePutComment(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleDeleteComment(t *testing.T) {
+	subtests := []struct {
+		name             string
+		collection       string
+		commentIdHex     string
+		expectedResponse string
+		expectedCode     int
+	}{
+		{
+			name:             "happy-path",
+			collection:       fakeCommentCol,
+			commentIdHex:     fakeCommentObjIdHex,
+			expectedResponse: `{"msj":"comment deleted"}`,
+			expectedCode:     http.StatusOK,
+		},
+		{
+			name:             "return-error",
+			collection:       "fakeOtherCol",
+			commentIdHex:     fakeCommentObjIdHex,
+			expectedResponse: `{"error":"dummy ReadComment error"}`,
+			expectedCode:     http.StatusInternalServerError,
+		},
+		{
+			name:             "no-docs",
+			collection:       "NoDocs",
+			commentIdHex:     fakeCommentObjIdHex,
+			expectedResponse: `{"error":"mongo: no documents in result"}`,
+			expectedCode:     http.StatusNotFound,
+		},
+		{
+			name:             "return-error-invalid-hex-id",
+			collection:       fakeCommentCol,
+			commentIdHex:     "12345",
+			expectedResponse: `{"error":"the provided hex string is not a valid ObjectID"}`,
+			expectedCode:     http.StatusBadRequest,
+		},
+	}
+
+	for _, st := range subtests {
+		t.Run(st.name, func(t *testing.T) {
+			a := new(App)
+			router := mux.NewRouter()
+			subRouter := router.PathPrefix("/comment").Subrouter()
+
+			subRouter.HandleFunc("/{id:[a-z0-9]+}", a.handleDeleteComment(new(MockComment), fakeDbName, st.collection)).Methods(http.MethodDelete)
+
+			w := httptest.NewRecorder()
+			url := fmt.Sprintf("/comment/%v", st.commentIdHex)
+			r, err := http.NewRequest(http.MethodDelete, url, nil)
+			router.ServeHTTP(w, r)
+
+			if assert.NoError(t, err) {
+				assert.EqualValues(t, st.expectedCode, w.Code)
+			}
+
+			b, err := io.ReadAll(w.Body)
+			if assert.NoError(t, err) {
+				assert.EqualValues(t, st.expectedResponse, strings.TrimSuffix(string(b), "\n"))
+			}
+		})
+	}
+}

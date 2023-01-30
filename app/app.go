@@ -66,7 +66,7 @@ func (a *App) serve() {
 	cSbr.HandleFunc("/", a.handleCreateComment(appDb.NewModels(), appConstants.DbName, appConstants.PColl)).Methods(http.MethodPost)
 	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodGet)
 	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handlePutComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodPut)
-	// cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleDeleteComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodDelete)
+	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleDeleteComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodDelete)
 
 	// http server configs
 	srv := &http.Server{
@@ -309,5 +309,36 @@ func (a *App) handlePutComment(c appDb.Comment, dbName, colName string) http.Han
 		}
 
 		jsonPrint(w, http.StatusOK, map[string]string{"msj": "comment updated"})
+	}
+}
+
+func (a *App) handleDeleteComment(c appDb.Comment, dbName, colName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		objId, err := primitive.ObjectIDFromHex(vars["id"])
+		if err != nil {
+			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid comment id")
+			return
+		}
+
+		_, err = c.ReadComment(a.mCl, objId, dbName, colName)
+		if err != nil {
+			switch err {
+			case mongo.ErrNoDocuments:
+				jsonPrintError(w, http.StatusNotFound, err.Error(), "comment not found")
+				return
+			default:
+				jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot read comment")
+				return
+			}
+		}
+
+		err = c.DeleteComment(a.mCl, objId, dbName, colName)
+		if err != nil {
+			jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot delete comment")
+			return
+		}
+
+		jsonPrint(w, http.StatusOK, map[string]string{"msj": "comment deleted"})
 	}
 }

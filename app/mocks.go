@@ -127,6 +127,12 @@ func (mC *MockComment) UpdateComment(mCl *mongo.Client, objId primitive.ObjectID
 }
 
 func (mC *MockComment) DeleteComment(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) error {
+	if dbName == fakeDbName && colName != fakePostCol && colName != fakeCommentCol {
+		if colName == "NoDocs" {
+			return mongo.ErrNoDocuments
+		}
+		return errors.New("dummy error")
+	}
 	return nil
 }
 
