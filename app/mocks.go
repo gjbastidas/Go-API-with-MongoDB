@@ -102,6 +102,18 @@ func (mC *MockComment) CreateComment(mCl *mongo.Client, dbName, colName string) 
 }
 
 func (mC *MockComment) ReadComment(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) (*appDb.CommentDoc, error) {
+	if dbName == fakeDbName {
+		out := new(appDb.CommentDoc)
+		if colName != fakePostCol && colName != fakeCommentCol {
+			if colName == "NoDocs" {
+				return out, mongo.ErrNoDocuments
+			}
+			return out, errors.New("dummy ReadComment error")
+		}
+		res, _ := bson.Marshal(bson.M{"_id": objId, "content": "fake content", "author": "fake author", "postId": fakeObjIdHex})
+		_ = bson.Unmarshal(res, out)
+		return out, nil
+	}
 	return &appDb.CommentDoc{}, nil
 }
 
@@ -113,6 +125,6 @@ func (mC *MockComment) DeleteComment(mCl *mongo.Client, objId primitive.ObjectID
 	return nil
 }
 
-func (mC *MockComment) GetRelatedPostId() primitive.ObjectID {
-	return getObjId(fakeObjIdHex)
+func (mC *MockComment) GetRelatedPostId() string {
+	return fakeObjIdHex
 }

@@ -10,14 +10,14 @@ type Comment interface {
 	ReadComment(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) (*CommentDoc, error)
 	UpdateComment(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) error
 	DeleteComment(mCl *mongo.Client, objId primitive.ObjectID, dbName, colName string) error
-	GetRelatedPostId() primitive.ObjectID
+	GetRelatedPostId() string
 }
 
 type CommentDoc struct {
 	Id      primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
 	Content string             `json:"content,omitempty" bson:"content,omitempty"`
 	Author  string             `json:"author,omitempty" bson:"author,omitempty"`
-	PostId  primitive.ObjectID `json:"postId,omitempty" bson:"post,omitempty"`
+	PostId  string             `json:"postId,omitempty" bson:"postId,omitempty"`
 }
 
 func (c *CommentDoc) CreateComment(mCl *mongo.Client, dbName, colName string) (*mongo.InsertOneResult, error) {
@@ -36,6 +36,6 @@ func (c *CommentDoc) DeleteComment(mCl *mongo.Client, objId primitive.ObjectID, 
 	return deleteOneRecord(mCl, objId, dbName, colName)
 }
 
-func (c *CommentDoc) GetRelatedPostId() primitive.ObjectID {
+func (c *CommentDoc) GetRelatedPostId() string {
 	return c.PostId
 }

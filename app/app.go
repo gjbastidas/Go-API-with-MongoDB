@@ -64,7 +64,7 @@ func (a *App) serve() {
 
 	cSbr := r.PathPrefix("/comment").Subrouter()
 	cSbr.HandleFunc("/", a.handleCreateComment(appDb.NewModels(), appConstants.DbName, appConstants.PColl)).Methods(http.MethodPost)
-	// cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodGet)
+	cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleGetComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodGet)
 	// cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handlePutComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodPut)
 	// cSbr.HandleFunc("/{id:[a-z0-9]+}", a.handleDeleteComment(new(appDb.CommentDoc), appConstants.DbName, appConstants.PColl)).Methods(http.MethodDelete)
 
@@ -222,7 +222,12 @@ func (a *App) handleCreateComment(models *appDb.Models, dbName, colName string) 
 			return
 		}
 
-		postId := models.C.GetRelatedPostId()
+		postIdStr := models.C.GetRelatedPostId()
+		postId, err := primitive.ObjectIDFromHex(postIdStr)
+		if err != nil {
+			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid post id")
+			return
+		}
 		_, err = models.P.ReadPost(a.mCl, postId, dbName, colName)
 		if err != nil {
 			switch err {
@@ -242,5 +247,30 @@ func (a *App) handleCreateComment(models *appDb.Models, dbName, colName string) 
 		}
 
 		jsonPrint(w, http.StatusCreated, res)
+	}
+}
+
+func (a *App) handleGetComment(c appDb.Comment, dbName, colName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		objId, err := primitive.ObjectIDFromHex(vars["id"])
+		if err != nil {
+			jsonPrintError(w, http.StatusBadRequest, err.Error(), "invalid comment id")
+			return
+		}
+
+		res, err := c.ReadComment(a.mCl, objId, dbName, colName)
+		if err != nil {
+			switch err {
+			case mongo.ErrNoDocuments:
+				jsonPrintError(w, http.StatusNotFound, err.Error(), "comment not found")
+				return
+			default:
+				jsonPrintError(w, http.StatusInternalServerError, err.Error(), "cannot read comment")
+				return
+			}
+		}
+
+		jsonPrint(w, http.StatusOK, res)
 	}
 }
