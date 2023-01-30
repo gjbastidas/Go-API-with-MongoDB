@@ -26,7 +26,7 @@ content-type: {{contentType}}
 DELETE http://{{host}}/post/<<replace with id>>
 
 ### Create comment
-POST http://{{host}}/post/
+POST http://{{host}}/comment/
 content-type: {{contentType}}
 
 {
