@@ -24,3 +24,28 @@ content-type: {{contentType}}
 
 ### Delete post
 DELETE http://{{host}}/post/<<replace with id>>
+
+### Create comment
+POST http://{{host}}/post/
+content-type: {{contentType}}
+
+{
+  "content": "my first comment",
+  "author": "some author",
+  "postId": "<<replace with post id>>"
+}
+
+### Get comment
+GET http://{{host}}/comment/<<replace with id>>
+
+### Update comment
+PUT http://{{host}}/comment/<<replace with id>>
+content-type: {{contentType}}
+
+{
+  "content": "updated comment",
+  "author": "some author"
+}
+
+### Delete comment
+DELETE http://{{host}}/comment/<<replace with id>>
