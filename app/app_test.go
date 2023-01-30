@@ -21,8 +21,8 @@ func TestHandleCreatePost(t *testing.T) {
 	}{
 		{
 			name:             "happy-path",
-			collection:       "fakePostCol",
-			expectedResponse: `{"InsertedID":"89372c88c133e1e4deb0e10a"}`,
+			collection:       fakePostCol,
+			expectedResponse: `{"InsertedID":"` + fakePostObjIdHex + `"}`,
 			expectedCode:     http.StatusCreated,
 		},
 		{
@@ -42,7 +42,7 @@ func TestHandleCreatePost(t *testing.T) {
 
 			w := httptest.NewRecorder()
 			jsonBody := strings.NewReader(`{"content":"fake content", "author":"fake author"}`)
-			r, err := http.NewRequest("POST", "/post/", jsonBody)
+			r, err := http.NewRequest(http.MethodPost, "/post/", jsonBody)
 			router.ServeHTTP(w, r)
 
 			if assert.NoError(t, err) {
@@ -67,22 +67,22 @@ func TestHandleGetPost(t *testing.T) {
 	}{
 		{
 			name:             "happy-path",
-			collection:       "fakePostCol",
-			postIdHex:        "89372c88c133e1e4deb0e10a",
-			expectedResponse: `{"id":"89372c88c133e1e4deb0e10a","content":"fake content","author":"fake author"}`,
+			collection:       fakePostCol,
+			postIdHex:        fakePostObjIdHex,
+			expectedResponse: `{"id":"` + fakePostObjIdHex + `","content":"fake content","author":"fake author"}`,
 			expectedCode:     http.StatusOK,
 		},
 		{
 			name:             "return-error",
 			collection:       "fakeOtherCol",
-			postIdHex:        "89372c88c133e1e4deb0e10a",
+			postIdHex:        fakePostObjIdHex,
 			expectedResponse: `{"error":"dummy error"}`,
 			expectedCode:     http.StatusInternalServerError,
 		},
 		{
 			name:             "return-error-no-docs",
 			collection:       "NoDocs",
-			postIdHex:        "89372c88c133e1e4deb0e10a",
+			postIdHex:        fakePostObjIdHex,
 			expectedResponse: `{"error":"mongo: no documents in result"}`,
 			expectedCode:     http.StatusNotFound,
 		},
@@ -105,7 +105,7 @@ func TestHandleGetPost(t *testing.T) {
 
 			w := httptest.NewRecorder()
 			url := fmt.Sprintf("/post/%v", st.postIdHex)
-			r, err := http.NewRequest("GET", url, nil)
+			r, err := http.NewRequest(http.MethodGet, url, nil)
 			router.ServeHTTP(w, r)
 
 			if assert.NoError(t, err) {
@@ -130,28 +130,28 @@ func TestHandlePutPost(t *testing.T) {
 	}{
 		{
 			name:             "happy-path",
-			collection:       "fakePostCol",
-			postIdHex:        "89372c88c133e1e4deb0e10a",
+			collection:       fakePostCol,
+			postIdHex:        fakePostObjIdHex,
 			expectedResponse: `{"msj":"post updated"}`,
 			expectedCode:     http.StatusOK,
 		},
 		{
 			name:             "return-error",
 			collection:       "fakeOtherCol",
-			postIdHex:        "89372c88c133e1e4deb0e10a",
+			postIdHex:        fakePostObjIdHex,
 			expectedResponse: `{"error":"dummy error"}`,
 			expectedCode:     http.StatusInternalServerError,
 		},
 		{
 			name:             "no-docs",
 			collection:       "NoDocs",
-			postIdHex:        "89372c88c133e1e4deb0e10a",
+			postIdHex:        fakePostObjIdHex,
 			expectedResponse: `{"error":"mongo: no documents in result"}`,
 			expectedCode:     http.StatusNotFound,
 		},
 		{
 			name:             "return-error-invalid-hex-id",
-			collection:       "fakePostCol",
+			collection:       fakePostCol,
 			postIdHex:        "12345",
 			expectedResponse: `{"error":"the provided hex string is not a valid ObjectID"}`,
 			expectedCode:     http.StatusBadRequest,
@@ -193,22 +193,22 @@ func TestHandleDeletePost(t *testing.T) {
 	}{
 		{
 			name:             "happy-path",
-			collection:       "fakePostCol",
-			postIdHex:        "89372c88c133e1e4deb0e10a",
+			collection:       fakePostCol,
+			postIdHex:        fakePostObjIdHex,
 			expectedResponse: `{"msj":"post deleted"}`,
 			expectedCode:     http.StatusOK,
 		},
 		{
 			name:             "return-error",
 			collection:       "fakeOtherCol",
-			postIdHex:        "89372c88c133e1e4deb0e10a",
+			postIdHex:        fakePostObjIdHex,
 			expectedResponse: `{"error":"dummy error"}`,
 			expectedCode:     http.StatusInternalServerError,
 		},
 		{
 			name:             "no-docs",
 			collection:       "NoDocs",
-			postIdHex:        "89372c88c133e1e4deb0e10a",
+			postIdHex:        fakePostObjIdHex,
 			expectedResponse: `{"error":"mongo: no documents in result"}`,
 			expectedCode:     http.StatusNotFound,
 		},
@@ -255,8 +255,8 @@ func TestHandleCreateComment(t *testing.T) {
 	}{
 		{
 			name:             "happy-path",
-			collection:       "fakeCommentCol",
-			expectedResponse: `{"InsertedID":"bfc80a35195ed2079d97c43b"}`,
+			collection:       fakeCommentCol,
+			expectedResponse: `{"InsertedID":"` + fakeCommentObjIdHex + `"}`,
 			expectedCode:     http.StatusCreated,
 		},
 		{
@@ -278,7 +278,7 @@ func TestHandleCreateComment(t *testing.T) {
 
 			w := httptest.NewRecorder()
 			jsonBody := strings.NewReader(`{"content":"fake content", "author":"fake author", "postId":"89372c88c133e1e4deb0e10a"}`)
-			r, err := http.NewRequest("POST", "/comment/", jsonBody)
+			r, err := http.NewRequest(http.MethodPost, "/comment/", jsonBody)
 			router.ServeHTTP(w, r)
 
 			if assert.NoError(t, err) {
@@ -305,7 +305,7 @@ func TestHandleGetComment(t *testing.T) {
 			name:             "happy-path",
 			collection:       fakeCommentCol,
 			commentIdHex:     fakeCommentObjIdHex,
-			expectedResponse: `{"id":"` + fakeCommentObjIdHex + `","content":"fake content","author":"fake author","postId":"` + fakeObjIdHex + `"}`,
+			expectedResponse: `{"id":"` + fakeCommentObjIdHex + `","content":"fake content","author":"fake author","postId":"` + fakePostObjIdHex + `"}`,
 			expectedCode:     http.StatusOK,
 		},
 		{
@@ -324,7 +324,7 @@ func TestHandleGetComment(t *testing.T) {
 		},
 		{
 			name:             "return-error-invalid-hex-id",
-			collection:       "fakePostCol",
+			collection:       fakeCommentCol,
 			commentIdHex:     "12345",
 			expectedResponse: `{"error":"the provided hex string is not a valid ObjectID"}`,
 			expectedCode:     http.StatusBadRequest,

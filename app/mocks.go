@@ -13,7 +13,7 @@ const (
 	fakeDbName          = "fakeDb"
 	fakePostCol         = "fakePostCol"
 	fakeCommentCol      = "fakeCommentCol"
-	fakeObjIdHex        = "89372c88c133e1e4deb0e10a"
+	fakePostObjIdHex    = "89372c88c133e1e4deb0e10a"
 	fakeCommentObjIdHex = "bfc80a35195ed2079d97c43b"
 )
 
@@ -38,7 +38,7 @@ func (mP *MockPost) CreatePost(mCl *mongo.Client, dbName, colName string) (*mong
 		if colName != fakePostCol {
 			return out, errors.New("dummy error")
 		}
-		objId, _ := primitive.ObjectIDFromHex(fakeObjIdHex)
+		objId, _ := primitive.ObjectIDFromHex(fakePostObjIdHex)
 		out.InsertedID = objId
 		return out, nil
 	}
@@ -110,7 +110,7 @@ func (mC *MockComment) ReadComment(mCl *mongo.Client, objId primitive.ObjectID, 
 			}
 			return out, errors.New("dummy ReadComment error")
 		}
-		res, _ := bson.Marshal(bson.M{"_id": objId, "content": "fake content", "author": "fake author", "postId": fakeObjIdHex})
+		res, _ := bson.Marshal(bson.M{"_id": objId, "content": "fake content", "author": "fake author", "postId": fakePostObjIdHex})
 		_ = bson.Unmarshal(res, out)
 		return out, nil
 	}
@@ -137,5 +137,5 @@ func (mC *MockComment) DeleteComment(mCl *mongo.Client, objId primitive.ObjectID
 }
 
 func (mC *MockComment) GetRelatedPostId() string {
-	return fakeObjIdHex
+	return fakePostObjIdHex
 }
