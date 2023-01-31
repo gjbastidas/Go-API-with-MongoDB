@@ -1,7 +1,7 @@
 # Simple API with MongoDB backend
 
 Hopefully, this app helps to understand how to create an API
-with **MongoDB** backend using **Golang**.
+with **MongoDB** backend using **Golang** and no framework.
 
 I also included topics such as:
 - Anonymous functions, Go routines, Channels, Interfaces and Generics.
